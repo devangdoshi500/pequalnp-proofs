@@ -1,0 +1,27 @@
+CHECKED PARTIAL RESULTS — NOT OFFICIAL PROJECT CONTRIBUTIONS
+
+These files contain reusable special cases, not proofs of the complete desk statements.
+No upstream proof pull request is being claimed or opened for these partial results.
+
+L_meta_1623_zero_cross.lean
+  Main special case: PEqualNP.Outside.L_meta_1623_aux.zero_cross_case.
+  Proves the exact L-meta-1623 statement specialized to k = 0.
+  Includes degree-zero independence, gate envelope, and circuit induction helpers.
+
+L_meta_951_pairs.lean
+  Main special case: PEqualNP.Outside.L_meta_951_aux.pairs_case.
+  Proves L-meta-951 when every requested set has cardinality exactly two.
+  Includes a general output-count lower bound, without restrictions on gate operations.
+
+Both files passed the pinned Lean toolchain. Their final axiom reports list only:
+  propext, Classical.choice, Quot.sound
+Neither proof uses sorry, added axioms, or native_decide.
+These are local Lean checks, not ACCEPTED verdicts from the project's checker.
+
+Reproduce from the repository root, after fetching the pinned Mathlib cache:
+  cd lean
+  lake env lean ../research/partials/L_meta_1623_zero_cross.lean
+  lake env lean ../research/partials/L_meta_951_pairs.lean
+
+To reuse helpers in a complete submission, follow CONTRIBUTING.md, copy only what
+is needed into the single assigned file, and prove the entire posted statement.
