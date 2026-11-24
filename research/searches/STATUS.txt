@@ -1,0 +1,27 @@
+L-meta-670, shard 5 — reproducible search program
+
+This program searches only circuits whose first gate is AND(x_0,x_4),
+with at most 15 gates, for the posted Petersen-minus-a-vertex edge function.
+It is not a proof of the full L-meta-670 statement and has no ACCEPTED verdict.
+
+Program SHA-256:
+f3211520d89f1db6d882cd972a864dbed971f1a015a2ac7a0bebf8feed8dad15
+
+Requirements: Python 3 and z3-solver (run used z3-solver 5.4.1.0).
+
+Run the exhaustive tiny sanity check:
+  python L_meta_670_shard5.py --self-test
+
+Run a bounded search, without contacting the desk:
+  python L_meta_670_shard5.py --seconds 1800
+
+Only add --lease LEASE_ID if you hold this exact shard. With that option,
+the program renews the lease, stops on withdrawal, and reports exhaustion
+with its own SHA-256 only if the solver returns UNSAT. A solver UNSAT result
+is computational evidence, not a Lean-checked theorem. Timeout is inconclusive.
+A satisfying candidate is independently evaluated on all 512 inputs and saved;
+it still needs conversion into a Lean proof and the appropriate desk handling.
+
+The encoding includes empty and unary gates and missing-wire false reads.
+Shorter circuits are covered by output-copy padding. No unproved graph
+symmetry reduction is applied inside this shard.
