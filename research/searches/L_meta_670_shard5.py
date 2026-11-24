@@ -15,13 +15,25 @@ CEGIS constrains selected assignments, then independently evaluates every
 candidate on all 2^n inputs. UNSAT on a subset entails no full witness.
 Timeout and interruption are never reported as exhaustion.
 """
-import argparse,datetime,hashlib,itertools,json,os,threading,time,urllib.request,urllib.error
+import argparse,datetime,hashlib,itertools,json,os,subprocess,threading,time,urllib.error
 from pathlib import Path
 from z3 import SolverFor,BitVec,BitVecVal,Bool,BoolVal,If,And,Or,Not,ULT,ULE,sat,unsat
 
 EDGES=[(0,1),(1,2),(2,3),(3,4),(4,0),(0,5),(1,6),(2,7),(3,8),(5,7),(6,8),(8,5)]
 
 def now(): return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+def desk_post(path):
+    url='https://pequalnp.com/desk/'+path
+    response=subprocess.run(['curl','-sS','--max-time','20','-X','POST','-w','\n%{http_code}',url],
+        capture_output=True,text=True)
+    if response.returncode:
+        raise RuntimeError('curl failed: '+response.stderr.strip())
+    body,code=response.stdout.rsplit('\n',1)
+    code=int(code)
+    if code<200 or code>=300:
+        raise urllib.error.HTTPError(url,code,body,None,None)
+    return json.loads(body)
 def table(n,fn): return sum(1<<x for x in range(1<<n) if fn(x))
 
 class Search:
@@ -120,9 +132,7 @@ def run(seconds,lease):
         with lock:
             temporary=statepath.with_suffix('.tmp')
             temporary.write_text(json.dumps(state,indent=2)+'\n');temporary.replace(statepath)
-    def post(path):
-        with urllib.request.urlopen(urllib.request.Request('https://pequalnp.com/desk/'+path,method='POST'),timeout=20) as r:
-            return json.loads(r.read())
+    post=desk_post
     def beat():
         while not stopped.wait(540):
             try:
@@ -130,10 +140,11 @@ def run(seconds,lease):
                 state['last_renewal_utc']=now();state['renewal_response']=response;save()
             except urllib.error.HTTPError as e:
                 state['renewal_error']=str(e);save()
-                if e.code==410:
-                    withdrawn.set();search.solver.interrupt();return
+                state['stop_reason']='renewal HTTP '+str(e.code)
+                withdrawn.set();search.solver.interrupt();return
             except Exception as e:
-                state['renewal_error']=repr(e);save()
+                state['renewal_error']=repr(e);state['stop_reason']='renewal failed';save()
+                withdrawn.set();search.solver.interrupt();return
     save()
     if lease:threading.Thread(target=beat,daemon=True).start()
     for x in range(1<<n):
@@ -174,7 +185,8 @@ def run(seconds,lease):
             for x in additions:search.add(x)
             save()
     except Exception as e:
-        state['status']='failed';state['error']=repr(e)
+        state['status']='exhausted_unreported' if state.get('solver_result')=='unsat' else 'failed'
+        state['error']=repr(e)
     finally:
         stopped.set();state['finished_utc']=now();state['samples']=len(search.samples);save()
         print(json.dumps(state),flush=True)

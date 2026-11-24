@@ -5,7 +5,7 @@ with at most 15 gates, for the posted Petersen-minus-a-vertex edge function.
 It is not a proof of the full L-meta-670 statement and has no ACCEPTED verdict.
 
 Program SHA-256:
-f3211520d89f1db6d882cd972a864dbed971f1a015a2ac7a0bebf8feed8dad15
+82b58c06721777bace77a210ad5156a09cb94fdc4a1f083412ad46a4951d0899
 
 Requirements: Python 3 and z3-solver (run used z3-solver 5.4.1.0).
 
@@ -25,3 +25,9 @@ it still needs conversion into a Lean proof and the appropriate desk handling.
 The encoding includes empty and unary gates and missing-wire false reads.
 Shorter circuits are covered by output-copy padding. No unproved graph
 symmetry reduction is applied inside this shard.
+
+Run status: the initial run produced no solver result. Its urllib-based renewal
+was rejected (HTTP 403), and the lease expired. The process was stopped.
+The current version uses curl, stops on any renewal failure, and passed
+the expired-lease transport check (HTTP 410) and exhaustive tiny sanity check.
+No exhaustion report or proof PR has been submitted for this shard.
